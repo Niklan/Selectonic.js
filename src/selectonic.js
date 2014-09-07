@@ -1,69 +1,99 @@
 /**
  * Selectonic - parse <select> tag to object, then convert it to html.
  */
-(function ($) {
+;
+(function ($, window, document, undefined) {
 
-    $.fn.selectonic = function (options) {
-        // Selector of <select> element.
-        var select = $(this.selector);
+    var pluginName = 'selectonic',
+        defaults = {
 
-        // Object of <select> elements.
-        var selectObjects = $.fn.selectonic.parseSelect(select);
+            // After Selectonic initialization.
+            afterInit: function () {
+            }
+        };
 
-        console.log(selectObjects);
+    // Selectonic constructor.
+    function Selectonic(element, options) {
 
-    }
+        // Cache constructor.
+        var self = this;
 
-    /**
-     * This function parse <select> tag to object.
-     * @param <select> tag selector.
-     */
-    $.fn.selectonic.parseSelect = function (select) {
-        var result = new Object();
-        var selectNum = 0;
+        this.element = element;
 
-        // For each select element.
-        select.each(function () {
-            // Select instance attributes.
-            var selectElement = {
-                name: $(this).attr('name'),
-                size: $(this).attr('size'),
-                multiple: $(this).attr('multiple'),
-                hasGroups: $(this).has('optgroup').length ? true : false,
-                groups: {},
-                options: {}
+        this.options = $.extend({}, defaults, options);
+
+        this._defaults = defaults;
+        this._name = pluginName;
+
+        this.init(this.element);
+
+        // Callback after Selectonic initialized.
+        this.options.afterInit.call(this);
+
+        // API
+        return {
+            parseSelect: function () {
+                self.parseSelect(self.element);
             }
 
-            // Parse options and groups.
-            $(this).each(function () {
+        }
 
-                if (selectElement.hasGroups) {
-                    selectElement['groups'] = $(this).find('optgroup').map(function () {
-                        return {
-                            label: $(this).attr('label'),
-                            options: $(this).find('option').map(function () {
-                                return {
-                                    value: $(this).attr('value')
-                                };
-                            })
-                        };
-                    }).get();
-                }
-                else {
-                    selectElement['options'] = $(this).find('option').map(function () {
-                        return {
-                            value: $(this).attr('value')
-                        };
-                    })
-                }
-
-            });
-
-            result[selectNum] = selectElement;
-            selectNum++;
-        });
-
-        return result;
     }
 
-})(jQuery);
+    // Selectonic initialization.
+    Selectonic.prototype.init = function (element) {
+        var selectObject = this.parseSelect(element);
+    };
+
+    /**
+     * Parse <select> element into Object.
+     */
+    Selectonic.prototype.parseSelect = function (element) {
+
+        var select = $(element).get(0);
+        var selectElement = {
+            name: $(select).attr('name'),
+            size: $(select).attr('size'),
+            multiple: $(select).attr('multiple'),
+            hasGroups: $(select).has('optgroup').length ? true : false,
+            groups: {},
+            options: {}
+        }
+
+        if (selectElement.hasGroups) {
+            selectElement['groups'] = $(element).find('optgroup').map(function () {
+                return {
+                    label: $(this).attr('label'),
+                    options: $(this).find('option').map(function () {
+                        return {
+                            value: $(this).attr('value'),
+                            data: $(this).html()
+                        };
+                    })
+                };
+            }).get();
+        }
+        else {
+            selectElement['options'] = $(element).find('option').map(function () {
+                return {
+                    value: $(this).attr('value'),
+                    data: $(this).html()
+                };
+            })
+        }
+
+    };
+
+    // Plugin registration.
+    $.fn[pluginName] = function (options) {
+
+        return this.each(function () {
+            if (!$.data(this, 'api_' + pluginName)) {
+                var instance = $.data(this, 'api_' + pluginName,
+                    new Selectonic($(this), options));
+            }
+        });
+
+    }
+
+})(jQuery, window, document, undefined);
