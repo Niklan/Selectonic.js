@@ -7,52 +7,72 @@
     <script src="../src/selectonic.js"></script>
 
     <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+        }
+
         .selectonic-select {
             display: inline-block;
-            padding: 5px 10px;
-            background: none repeat scroll 0% 0% rgba(251, 251, 251, 1);
-            color: rgba(87, 87, 87, 1);
-            border: 1px solid #E0E0E0;
-            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            background: none repeat scroll 0% 0% #1ABC9C;
+            border-radius: 3px;
             cursor: pointer;
             position: relative;
+            color: #FFF;
         }
 
         .selectonic-options-wrapper {
-            background: black;
-            border: 1px solid black;
+            background: #ecf0f1;
             display: block;
             border-radius: 3px;
+            margin-top: 5px;
         }
 
         .selectonic-options-wrapper > .selectonic-options-option {
             padding: 7px;
-            border-bottom: 1px solid rgba(254, 252, 252, 0.18);
-            color: #FFF;
+            border-bottom: 1px solid rgba(137, 133, 133, 0.18);
+            color: #34495E;
             cursor: pointer;
+            border-top: 1px solid rgba(255, 255, 255, 0.61);
+        }
+
+        .selectonic-options-wrapper > .selectonic-options-option:first-child {
+            border-top: none;
         }
 
         .selectonic-options-wrapper > .selectonic-options-option:last-child {
-            border: none;
+            border-bottom: none;
         }
 
         .selectonic-options-wrapper > .selectonic-options-option:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.38);
         }
     </style>
 </head>
 <body>
+
+<h2>Simple select</h2>
+
+<p id="select-value">Selected value: <span>&nbsp;</span></p>
+
+<p>
     <select>
         <option>Apple</option>
         <option>Orange</option>
         <option>Potato</option>
         <option>Banana</option>
     </select>
+</p>
 
-    <script>
-        (function ($) {
-            $('select').selectonic();
-        })(jQuery);
-    </script>
+
+<script>
+    (function ($) {
+        $('select').selectonic();
+
+        setInterval(function () {
+            $('#select-value span').html($('select').val())
+        }, 500)
+    })(jQuery);
+</script>
 </body>
 </html>

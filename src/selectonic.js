@@ -1,5 +1,10 @@
 /**
+ * Selectonic.js
+ * Version: 0 (under development)
  * Selectonic - parse <select> tag to object, then convert it to html.
+ * Author: @NiklanRUS
+ * Site: http://niklan.net/
+ * Licensed under GPL v2.
  *
  * @TODO: select option window styles: min width as select, auto with.
  * @TODO: Default label for select: label+selected value, selected value.
@@ -60,6 +65,8 @@
         // Generate HTML for select, based on style.
         var selectHTML = this.generateSelectHTML(selectObject);
 
+        this.options['selectObject'] = selectObject;
+
         // Build our HTML select.
         this.build(selectHTML);
 
@@ -72,6 +79,7 @@
 
         var select = $(element).get(0);
         var selectElement = {
+            originalSelect: select,
             name: $(select).attr('name'),
             size: $(select).attr('size'),
             multiple: $(select).attr('multiple'),
@@ -174,12 +182,17 @@
         $(element).after(selectHTML);
 
         // Bind click for our select.
-        $('.'+className+'-select').bind('click', function (e) {
+        $('.' + className + '-select').bind('click', function (e) {
             self.selectClick($(this), e);
-        })
+        });
+
+        // Bind click for option selection.
+        $('.' + className + '-options-option').bind('click', function (e) {
+            self.selectOptionClick($(this), e);
+        });
 
         // Hide select options by default.
-        $('.'+className+'-options-wrapper', $('.'+className+'-select').parent()).hide();
+        $('.' + className + '-options-wrapper', $('.' + className + '-select').parent()).hide();
 
     }
 
@@ -189,33 +202,71 @@
      */
     Selectonic.prototype.selectClick = function (element, event) {
 
-        var className = this.options.className;
-
         // .selectonic-select
         var selectElement = $(element).get(0);
 
-        // @TODO: Open\close select div.
         if ($(selectElement).hasClass('opened')) {
-
-            $(selectElement).toggleClass('opened');
-            $('.'+className+'-options-wrapper', $(selectElement).parent()).hide();
-
+            this.selectClose(selectElement);
         }
         else {
-
-            $(selectElement).toggleClass('opened');
-            $('.'+className+'-options-wrapper', $(selectElement).parent()).show();
-
-            // Setting up position for options.
-            var position = $(selectElement).parent().position();
-            var height = $(selectElement).outerHeight(true);
-
-            $('.'+className+'-options-wrapper', $(selectElement).parent()).css({
-                position: 'absolute',
-                top: position.top + height,
-                left: position.left
-            });
+            this.selectOpen(selectElement);
         }
+
+    }
+
+    /**
+     * Open options for select.
+     * @param element
+     */
+    Selectonic.prototype.selectOpen = function (element) {
+
+        var className = this.options.className;
+
+        $(element).toggleClass('opened');
+        $('.' + className + '-options-wrapper', $(element).parent()).show();
+
+        // Setting up position for options.
+        var position = $(element).parent().position();
+        var height = $(element).outerHeight(true);
+
+        $('.' + className + '-options-wrapper', $(element).parent()).css({
+            position: 'absolute',
+            top: position.top + height,
+            left: position.left
+        });
+
+    }
+
+    /**
+     * Close option select.
+     * @param element
+     */
+    Selectonic.prototype.selectClose = function (element) {
+
+        var className = this.options.className;
+
+        $(element).toggleClass('opened');
+        $('.' + className + '-options-wrapper', $(element).parent()).hide();
+
+    }
+
+    /**
+     * React on select option in select.
+     * @param element
+     * @param event
+     */
+    Selectonic.prototype.selectOptionClick = function (element, event) {
+
+        var className = this.options.className;
+        var selectedOption = $(element).get(0);
+        var selectElement = this.options.selectObject.originalSelect;
+        var value = $(selectedOption).data('value');
+
+        // Set value to original select.
+        $(selectElement).val(value);
+
+        var selectonic = $(element).parents('.' + className)
+        this.selectClose($('.'+className+'-select', selectonic));
 
     }
 
