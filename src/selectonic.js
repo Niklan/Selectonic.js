@@ -65,6 +65,7 @@
         // Generate HTML for select, based on style.
         var selectHTML = this.generateSelectHTML(selectObject);
 
+        // Save select object for further using.
         this.options['selectObject'] = selectObject;
 
         // Build our HTML select.
@@ -137,12 +138,26 @@
 
         var resultHTML = '';
 
-        var className = this.options.className;
+        // Class selector for wrapper.
+        var classicClassName = this.options.className;
+        // Class for select div.
+        var classicClassSelect = classicClassName + '-select';
+        // Class for options wrapper.
+        var classicClassSelectOptions = classicClassName + '-options-wrapper';
+        // Class for single option element.
+        var classicClassOption = classicClassName + '-options-option';
 
-        resultHTML += '<div class="' + className + '">';
-        resultHTML += '<div class="' + className + '-select">' + 'Select a value  ▾' + '</div>';
-        resultHTML += '<div class="' + className + '-options-wrapper">';
+        // Save calsses to options, for further using.
+        this.options['classes'] = {
+            'defaultClass': classicClassName,
+            'classSelect': classicClassSelect,
+            'classOptions': classicClassSelectOptions,
+            'classOption': classicClassOption
+        }
 
+        resultHTML += '<div class="' + classicClassName + '">';
+        resultHTML += '<div class="' + classicClassSelect + '">' + 'Select a value  ▾' + '</div>';
+        resultHTML += '<div class="' + classicClassSelectOptions + '">';
 
         if (selectObject.hasGroups) {
             // @TODO: when select has groups.
@@ -151,7 +166,7 @@
 
             selectObject.options.each(function () {
 
-                resultHTML += '<div class="' + className + '-options-option" data-value="' + this.value + '">';
+                resultHTML += '<div class="' + classicClassOption + '" data-value="' + this.value + '">';
                 resultHTML += this.data;
                 resultHTML += '</div>';
 
@@ -174,25 +189,26 @@
      */
     Selectonic.prototype.build = function (selectHTML) {
 
-        var element = this.element;
-        var className = this.options.className;
         var self = this;
+        var element = this.element;
+        var classes = this.options.classes;
+        var newSelect = $(selectHTML);
 
         $(element).hide();
-        $(element).after(selectHTML);
+        $(element).after(newSelect);
 
         // Bind click for our select.
-        $('.' + className + '-select').bind('click', function (e) {
+        $('.' + classes.classSelect, $(newSelect)).bind('click', function (e) {
             self.selectClick($(this), e);
         });
 
         // Bind click for option selection.
-        $('.' + className + '-options-option').bind('click', function (e) {
+        $('.' + classes.classOption, $(newSelect)).bind('click', function (e) {
             self.selectOptionClick($(this), e);
         });
 
         // Hide select options by default.
-        $('.' + className + '-options-wrapper', $('.' + className + '-select').parent()).hide();
+        $('.' + classes.classOptions, $('.' + classes.classSelect).parent()).hide();
 
     }
 
@@ -202,8 +218,9 @@
      */
     Selectonic.prototype.selectClick = function (element, event) {
 
-        // .selectonic-select
+        // .selectonic-select (classSelect - element)
         var selectElement = $(element).get(0);
+        this.options['actionElement'] = selectElement;
 
         if ($(selectElement).hasClass('opened')) {
             this.selectClose(selectElement);
@@ -220,16 +237,16 @@
      */
     Selectonic.prototype.selectOpen = function (element) {
 
-        var className = this.options.className;
+        var classes = this.options.classes;
 
         $(element).toggleClass('opened');
-        $('.' + className + '-options-wrapper', $(element).parent()).show();
+        $('.' + classes.classOptions, $(element).parent()).show();
 
         // Setting up position for options.
         var position = $(element).parent().position();
         var height = $(element).outerHeight(true);
 
-        $('.' + className + '-options-wrapper', $(element).parent()).css({
+        $('.' + classes.classOptions, $(element).parent()).css({
             position: 'absolute',
             top: position.top + height,
             left: position.left
@@ -244,9 +261,10 @@
     Selectonic.prototype.selectClose = function (element) {
 
         var className = this.options.className;
+        var classes = this.options.classes;
 
         $(element).toggleClass('opened');
-        $('.' + className + '-options-wrapper', $(element).parent()).hide();
+        $('.' + classes.classOptions, $(element).parent()).hide();
 
     }
 
@@ -257,16 +275,14 @@
      */
     Selectonic.prototype.selectOptionClick = function (element, event) {
 
-        var className = this.options.className;
         var selectedOption = $(element).get(0);
-        var selectElement = this.options.selectObject.originalSelect;
-        var value = $(selectedOption).data('value');
+        var originalSelect = this.options.selectObject.originalSelect;
+        var actionElement = this.options.actionElement;
 
         // Set value to original select.
-        $(selectElement).val(value);
+        $(originalSelect).val($(selectedOption).data('value'));
 
-        var selectonic = $(element).parents('.' + className)
-        this.selectClose($('.'+className+'-select', selectonic));
+        this.selectClose($(actionElement));
 
     }
 

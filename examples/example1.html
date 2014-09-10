@@ -3,7 +3,7 @@
 <head>
     <title>Selectonic - example 1</title>
     <meta charset="UTF-8">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="../src/selectonic.js"></script>
 
     <style type="text/css">
@@ -26,6 +26,7 @@
             display: block;
             border-radius: 3px;
             margin-top: 5px;
+            z-index: 1000;
         }
 
         .selectonic-options-wrapper > .selectonic-options-option {
@@ -53,8 +54,6 @@
 
 <h2>Simple select</h2>
 
-<p id="select-value">Selected value: <span>&nbsp;</span></p>
-
 <p>
     <select>
         <option>Apple</option>
@@ -64,14 +63,18 @@
     </select>
 </p>
 
+<p>
+    <select>
+        <option>Superman</option>
+        <option>X-Men</option>
+        <option>Iron Man</option>
+        <option>Toad</option>
+    </select>
+</p>
 
 <script>
     (function ($) {
         $('select').selectonic();
-
-        setInterval(function () {
-            $('#select-value span').html($('select').val())
-        }, 500)
     })(jQuery);
 </script>
 </body>
