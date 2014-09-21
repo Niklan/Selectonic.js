@@ -10,6 +10,8 @@
  * @TODO: Default label for select: label+selected value, selected value.
  * @TODO: Select position for options: auto, left, bottom-left, bottom,
  *        bottom-right, right, top-left, top, top-right.
+ *
+ * @TODO: generators: select, options list
  */
 ;
 (function ($, window, document, undefined) {
@@ -71,7 +73,7 @@
         var selectObject = this.parseSelect(element);
 
         // Generate HTML for select, based on style.
-        var selectHTML = this.generateSelectHTML(selectObject);
+        var selectHTML = this.generateSelect(selectObject);
 
         // Save select object for further using.
         this.options['selectObject'] = selectObject;
@@ -96,8 +98,6 @@
             groups: {},
             options: {}
         };
-
-        console.log(selectElement);
 
         if (selectElement.hasGroups) {
             selectElement['groups'] = $(element).find('optgroup').map(function () {
@@ -130,10 +130,11 @@
      *
      * @TODO: support for custom styles.
      */
-    Selectonic.prototype.generateSelectHTML = function (selectObject) {
+    Selectonic.prototype.generateSelect = function (selectObject) {
 
-        var styleFunction = this.options.style;
+        var style = this.options.style;
         var className = this.options.className;
+        var self = this;
 
         // Data for style.
         var data = {
@@ -151,11 +152,54 @@
             }
         };
 
+        // Cache data.
         this.options.htmlData = data;
 
-        if (styleFunction == 'classic') {
-            return this.styleClassic(data);
+        // Generating html.
+        var styleFunction;
+
+        // Wrapper start.
+        var selectHTML = '<div class="' + data.classes.default + '">';
+
+        // Classic style.
+        if (style == 'classic') {
+
+            selectHTML += this.styleClassic('selector', data);
+
+            if (data.selectObject.hasGroups) {
+                selectHTML += this.styleClassic('optionsGroups', data);
+            }
+            else if (data.selectObject.multiple) {
+                selectHTML += this.styleClassic('optionMultiple', data);
+            }
+            else {
+                selectHTML += this.styleClassic('options', data);
+            }
+
         }
+        // User style.
+        else {
+
+            // Selector HTML.
+            selectHTML += style.call(this, 'selector', data);
+
+            if (data.selectObject.hasGroups) {
+                selectHTML += style.call(this, 'optionsGroups', data);
+            }
+            else if (data.selectObject.multiple) {
+                selectHTML += style.call(this, 'optionMultiple', data);
+            }
+            else {
+                selectHTML += style.call(this, 'options', data);
+            }
+
+        }
+
+
+        // Wrapper end.
+        selectHTML += '</div>';
+
+        return selectHTML;
 
     };
 
@@ -163,26 +207,47 @@
      * Default style of select.
      * @param data - object of data.
      */
-    Selectonic.prototype.styleClassic = function (data) {
+    Selectonic.prototype.styleClassic = function (element, data) {
 
-        var resultHTML = '';
+        switch (element) {
 
-        resultHTML += '<div class="' + data.classes.default + '">';
-
-        // Set up label for select.
-        var label = '';
-
-        switch (this.options.label) {
-            case 'label':
-                label = $(data.originalSelect).data('label');
+            case 'selector':
+                return this.styleClassicSelect(data);
                 break;
-            case 'selected':
-                label = $(data.originalSelect).val();
+
+            case 'options':
+                return this.styleClassicOptions(data);
                 break;
+
+            case 'optionsGroups':
+                return this.styleClassicOptionsGroup(data);
+                break;
+
+            case 'optionsMultiple':
+                return this.styleClassicOptionsMultiple(data);
+                break;
+
         }
 
-        resultHTML += '<div class="' + data.classes.select + '">' + label + ' ▾' + '</div>';
-        resultHTML += '<div class="' + data.classes.options + '">';
+    };
+
+    /**
+     * Style select element.
+     * @param data
+     */
+    Selectonic.prototype.styleClassicSelect = function (data) {
+
+        return '<div class="' + data.classes.select + '">' + 'Just for testing' + ' ▾' + '</div>';
+
+    };
+
+    /**
+     * Style select options.
+     * @param data
+     */
+    Selectonic.prototype.styleClassicOptions = function (data) {
+
+        var result = '<div class="' + data.classes.options + '">';
 
         if (data.selectObject.hasGroups) {
             // @TODO: when select has groups.
@@ -191,20 +256,41 @@
 
             data.selectObject.options.each(function () {
 
-                resultHTML += '<div class="' + data.classes.option + '" data-value="' + this.value + '">';
-                resultHTML += this.data;
-                resultHTML += '</div>';
+                result += '<div class="' + data.classes.option + '" data-value="' + this.value + '">';
+                result += this.data;
+                result += '</div>';
 
             });
 
         }
 
-        // .selectonic-options-wrapper
-        resultHTML += '</div>';
+        result += '</div>';
 
-        resultHTML += '</div>';
+        return result;
 
-        return resultHTML;
+    };
+
+    /**
+     * Style select options with group.
+     * @param data
+     */
+    Selectonic.prototype.styleClassicOptionsGroup = function (data) {
+
+        var result;
+
+        return result;
+
+    };
+
+    /**
+     * Style select options with multiple select.
+     * @param data
+     */
+    Selectonic.prototype.styleClassicOptionsMultiple = function (data) {
+
+        var result;
+
+        return result;
 
     };
 
