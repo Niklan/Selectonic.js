@@ -203,10 +203,15 @@
   SelectonicClassic.prototype = {
     init: function(data) {},
     generate: function(data) {
+      var select = "<div class=\"{wrapperClasses}\">\n    <button class=\"{selectClasses}\">{selectValue}</button>\n    <ul class=\"{selectOptionsClasses}\">\n        {selectOptions}\n    </ul>\n</div>";
       return [
-        '<a href="{url}">test</a>',
+        select,
         {
-          'url': 'http://google.ru/'
+          'wrapperClasses': 'seelctonic style-classic',
+          'selectClasses': 'select',
+          'selectValue': '- Select -',
+          'selectOptionsClasses': 'options',
+          'selectOptions': 'todo'
         }
       ]
     }
@@ -220,6 +225,6 @@
           new Selectonic($(this), options));
       }
     });
-  }
+  };
 
 })(jQuery, window, document, undefined);
