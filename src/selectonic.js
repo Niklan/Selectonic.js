@@ -18,19 +18,11 @@
 
   var pluginName = 'selectonic',
     defaults = {
+      // Settings for main Selectonic, except type specific.
       // Select type
       type: 'classic',
       // Class name using for detecting HTML selects.
-      className: 'selectonic',
-      // Default label for select. Can be selected, label.
-      // For label variant, label must be provided via data-label.
-      label: 'selected',
-      // Inherit classes from original select.
-      // @TODO
-      inheritClasses: false,
-      // After Selectonic initialization.
-      afterInit: function () {
-      }
+      className: 'selectonic'
     };
 
   // Selectonic constructor.
@@ -45,9 +37,6 @@
 
     // Initialization.
     this.init(this.element);
-
-    // Callback after Selectonic initialized.
-    this.options.afterInit.call(this);
 
     // API
     return {
@@ -70,6 +59,8 @@
       // Save select object for further using.
       this.options['selectObject'] = selectObject;
 
+      // Get type function.
+      this.getTypeFunction();
       // Generate select.
       this.create();
       // Render to page.
@@ -80,7 +71,6 @@
      * Parse <select> element into Object.
      */
     parseSelect: function (element) {
-
       var select = $(element).get(0);
       var selectElement = {
         originalSelect: select,
@@ -99,7 +89,9 @@
             options: $(this).find('option').map(function () {
               return {
                 value: $(this).attr('value') ? $(this).attr('value') : $(this).html(),
-                data: $(this).html()
+                data: $(this).html(),
+                selected: $(this).attr('selected') ? true : false,
+                disabled: $(this).attr('disabled') ? true : false
               };
             })
           };
@@ -109,7 +101,9 @@
         selectElement['options'] = $(element).find('option').map(function () {
           return {
             value: $(this).attr('value') ? $(this).attr('value') : $(this).html(),
-            data: $(this).html()
+            data: $(this).html(),
+            selected: $(this).attr('selected') ? true : false,
+            disabled: $(this).attr('disabled') ? true : false
           };
         })
       }
@@ -132,22 +126,14 @@
     },
 
     /**
-     * Create our select.
-     * This is preparation before render.
-     * @param type
+     * Getting function instance for style type.
      */
-    create: function () {
+    getTypeFunction: function () {
       var self = this;
       var options = self.options;
-      var element = self.element;
-      var data = {
-        'options': options,
-        'element': element
-      };
-      var type = options.type;
-      var typeFunction = type;
+      var typeFunction = options.type;
 
-      switch (type) {
+      switch (typeFunction) {
         case 'classic':
           typeFunction = 'SelectonicClassic';
           break;
@@ -158,8 +144,27 @@
         throw "Selectonic: Style function does not exist.";
       }
 
-      // Cache object.
       var typeObject = new functionInstance();
+      self.options.typeFunction = typeObject;
+    },
+
+    /**
+     * Create our select.
+     * This is preparation before render.
+     * @param type
+     */
+    create: function () {
+      var self = this;
+      var options = self.options;
+      var element = self.element;
+      var data = {
+        'options': options,
+        'element': element,
+        'selectonic': self
+      };
+
+      // Cache object.
+      var typeObject = options.typeFunction;
 
       // Call init() function and saves returned data.
       var init = typeObject.init(data);
@@ -182,15 +187,38 @@
     /**
      * Render function renders our data to page.
      */
-    render: function() {
+    render: function () {
       var self = this;
       var options = self.options;
       var element = self.element;
       var data = self.data;
       var type = options.type;
+      var newSelect = $(data.template);
+      this.data.newSelect = newSelect;
 
       $(element).hide();
-      $(element).after(data.template);
+      $(element).after(newSelect);
+
+      self.onSelectCreate();
+
+      // Bind events.
+      $('.select', newSelect).bind('click', function () {
+        self.onSelectClick();
+      });
+    },
+
+    /**
+     * onSelectCreate event.
+     */
+    onSelectCreate: function () {
+      this.options.typeFunction.onSelectCreate(this.data);
+    },
+
+    /**
+     * onSelectClick event handler.
+     */
+    onSelectClick: function () {
+      this.options.typeFunction.onSelectClick(this.data);
     }
   };
 
@@ -198,22 +226,70 @@
    * Classic style for select.
    * @constructor
    */
-  window.SelectonicClassic = function() {};
+  window.SelectonicClassic = function () {
+  };
 
   SelectonicClassic.prototype = {
-    init: function(data) {},
-    generate: function(data) {
-      var select = "<div class=\"{wrapperClasses}\">\n    <button class=\"{selectClasses}\">{selectValue}</button>\n    <ul class=\"{selectOptionsClasses}\">\n        {selectOptions}\n    </ul>\n</div>";
+    init: function (data) {
+    },
+
+    generate: function (data) {
+      var selectonic = data.selectonic;
+      var options = data.options;
+      var className = options.className;
+      var items = options.selectObject.options;
+
+      // Create label.
+      var label = false;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].selected) {
+          label = items[i].value;
+          break;
+        }
+      }
+      if (!label) {
+        label = items[0].value;
+      }
+
+      // Generate select options.
+      var selectOptions = '';
+      for (var i = 0; i < items.length; i++) {
+        var classes = 'option';
+        items[i].disabled ? classes += ' disabled' : false;
+        items[i].selected ? classes += ' selected' : false;
+
+        selectOptions += selectonic.theme(
+          '<li data-value="{value}" class="{classes}">{data}</li>',
+          {
+            'value': items[i].value,
+            'data': items[i].data,
+            'classes': classes
+          }
+        );
+      }
+
+      var select = "<div class=\"{wrapperClasses}\">\n    <button class=\"{selectClasses}\">{selectLabel}</button>\n    <ul class=\"{selectOptionsClasses}\">\n        {selectOptions}\n    </ul>\n</div>";
       return [
         select,
         {
-          'wrapperClasses': 'seelctonic style-classic',
+          'wrapperClasses': className + ' style-classic',
           'selectClasses': 'select',
-          'selectValue': '- Select -',
+          'selectLabel': label,
           'selectOptionsClasses': 'options',
-          'selectOptions': 'todo'
+          'selectOptions': selectOptions
         }
       ]
+    },
+
+    onSelectCreate: function (data) {
+      var select = data.newSelect;
+      var height = $('.select', select).outerHeight();
+      $('.options', select).css({'top': height});
+    },
+
+    onSelectClick: function (data) {
+      var select = data.newSelect;
+      $(select).toggleClass('open');
     }
   };
 

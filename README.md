@@ -1,51 +1,40 @@
 Selectonic
 ==========
 
-jQuery parser for &lt;select> element, for further convertation into HTML-Select alternative.
+jQuery parser for &lt;select&rt; element, for further convertation into HTML-Select alternative.
 
+Basic call:
 ```javascript
 $('select').selectonic();
 ```
 
-Options
+API
 ==========
 
+Default settings.
 ```javascript
 $('select').selectonic({
-    afterInit: alert('Hello World after init!')
+    type: 'classic'
 })
 ```
 
-| Option        | Default           | Type      |  Description |
-| ------------- |:-----------------:|:---------:|:-------------|
-| afterInit     | `function(){}`    | function  | Callback function after plugin initialized.             |
-| style         | classic           | function  | Name of function which gives selectObject for further generating HTML from that. |
+| Option        | Default           | Type        |  Description |
+| ------------- |:-----------------:|:-----------:|:-------------|
+| type          | 'classic'         | function    | Function using for styling select. Presets: classic. |
+| className     | 'selectonic'      | string      | Class for custom selects. This is not class for determinate select for replace.|
 
 
-API
+Declare own type (style)
 ==========
-Selectonic provides API as well.
 
-For using API create Selectonic instance.
-
-For single `<select>` element.
+You must write you own js which contain object
 
 ```javascript
-var selectonic = $('select').selectonic().data('api_selectonic');
-```
-
-If you have multiple `<select>` elements use this code.
-
-```javascript
-$('select').each(function() {
-    var selectonic = $('select').selectonic().data('api_selectonic');
-});
-```
-Then you can use API methods.
-
-F.e.
-
-```javascript
-var selectonic = $('select').selectonic().data('api_selectonic');
-selectonic.parseSelect($('select'));
+window.StyleName = function () {};
+SelectonicClassic.prototype = {
+    init: function (data) {},
+    generate: function (data) {},
+    onSelectCreate: function() {}
+    onSelectClick: function() {}
+  };
 ```
